@@ -74,7 +74,7 @@ class HBNBCommand(cmd.Cmd):
                 if pline:
                     # check for *args or **kwargs
                     if pline[0] == '{' and pline[-1] == '}'\
-                            and type(eval(pline)) is dict:
+                            and type(eval(pline)) == dict:
                         _args = pline
                     else:
                         _args = pline.replace(',', '')
@@ -115,17 +115,38 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """Create an object of any class."""
-        class_name = args.split()[0]
-        if not args:
+        c_name = att_name = att_val = ''
+        args_list = args.split()
+        if not args_list:
             print("** class name missing **")
             return
-        elif class_name not in HBNBCommand.classes:
+        c_name = args_list[0]
+        if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        new_instance = HBNBCommand.classes[class_name]()
-        storage.save()
+        new_instance = HBNBCommand.classes[c_name]()
+        if '=' not in args:
+            for i in range(1, len(args_list)):
+                part = args_list[i].partition("=")
+                att_name = part[0]
+                att_val = part[2]
+                if '.' in att_val:
+                    att_val = float(att_val)
+                elif att_val.isdigit():
+                    att_val = int(att_val)
+                elif att_val.startswith('"') and att_val.endswith('"'):
+                    att_val = att_val[1:-1]
+                    if '_' in att_val:
+                        att_val = att_val.replace('_', ' ')
+                setattr(new_instance, att_name, att_val)
+                att_name = att_val = ''
+        else:
+            new_instance = HBNBCommand.classes[c_name]()
+            att_name = args_list[1]
+            att_val = args_list[2]
+            setattr(new_instance, att_name, att_val)
+        new_instance.save()
         print(new_instance.id)
-        storage.save()
 
     def help_create(self):
         """Help information for the create method ."""
@@ -265,7 +286,7 @@ class HBNBCommand(cmd.Cmd):
             return
 
         # first determine if kwargs or args
-        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) is dict:
+        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) == dict:
             kwargs = eval(args[2])
             args = []  # reformat kwargs into list, ex: [<name>, <value>, ...]
             for k, v in kwargs.items():
