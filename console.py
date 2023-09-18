@@ -117,6 +117,8 @@ class HBNBCommand(cmd.Cmd):
         """Create an object of any class."""
         c_name = att_name = att_val = ''
         args_list = args.split()
+        performPart = args_list[1].partition("=")
+        equalFound = any(item == "=" for item in performPart)
         if not args_list:
             print("** class name missing **")
             return
@@ -125,7 +127,7 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
         new_instance = HBNBCommand.classes[c_name]()
-        if '=' in args:
+        if equalFound:
             for i in range(1, len(args_list)):
                 part = args_list[i].partition("=")
                 att_name = part[0]
