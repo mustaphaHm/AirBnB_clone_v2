@@ -140,11 +140,6 @@ class HBNBCommand(cmd.Cmd):
                         att_val = att_val.replace('_', ' ')
                 setattr(new_instance, att_name, att_val)
                 att_name = att_val = ''
-        else:
-            new_instance = HBNBCommand.classes[c_name]()
-            att_name = args_list[1]
-            att_val = args_list[2]
-            setattr(new_instance, att_name, att_val)
         new_instance.save()
         print(new_instance.id)
 
