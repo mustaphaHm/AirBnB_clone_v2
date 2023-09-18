@@ -74,7 +74,7 @@ class HBNBCommand(cmd.Cmd):
                 if pline:
                     # check for *args or **kwargs
                     if pline[0] == '{' and pline[-1] == '}'\
-                            and type(eval(pline)) == dict:
+                            and type(eval(pline)) is dict:
                         _args = pline
                     else:
                         _args = pline.replace(',', '')
@@ -97,7 +97,7 @@ class HBNBCommand(cmd.Cmd):
         exit()
 
     def help_quit(self):
-        """Print the help documentation for quit  ."""
+        """Print the help documentation for quit ."""
         print("Exits the program with formatting\n")
 
     def do_EOF(self, arg):
@@ -121,11 +121,11 @@ class HBNBCommand(cmd.Cmd):
             print("** class name missing **")
             return
         c_name = args_list[0]
-        if class_name not in HBNBCommand.classes:
+        if c_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
         new_instance = HBNBCommand.classes[c_name]()
-        if '=' not in args:
+        if '=' in args:
             for i in range(1, len(args_list)):
                 part = args_list[i].partition("=")
                 att_name = part[0]
@@ -251,11 +251,11 @@ class HBNBCommand(cmd.Cmd):
         print(count)
 
     def help_count(self):
-        """Print the help documentation for count."""
+        """Help information for the count command."""
         print("Usage: count <class_name>")
 
     def do_update(self, args):
-        """Update a certain object with new info ."""
+        """Update a certain object with new info."""
         c_name = c_id = att_name = att_val = kwargs = ''
 
         # isolate cls from id/args, ex: (<cls>, delim, <id/args>)
@@ -286,7 +286,7 @@ class HBNBCommand(cmd.Cmd):
             return
 
         # first determine if kwargs or args
-        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) == dict:
+        if '{' in args[2] and '}' in args[2] and type(eval(args[2])) is dict:
             kwargs = eval(args[2])
             args = []  # reformat kwargs into list, ex: [<name>, <value>, ...]
             for k, v in kwargs.items():
@@ -338,7 +338,7 @@ class HBNBCommand(cmd.Cmd):
         new_dict.save()  # save updates to file
 
     def help_update(self):
-        """Help information for the update class ."""
+        """Help information for the update class."""
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
 
