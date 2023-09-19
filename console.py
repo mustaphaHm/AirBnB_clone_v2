@@ -113,35 +113,48 @@ class HBNBCommand(cmd.Cmd):
         """Override the emptyline method of CMD ."""
         pass
 
+    def convert_value(self, value):
+        """Convert attribute value to teh right type."""
+        if '.' in value:
+            value = float(value)
+        elif value.isdigit():
+            value = int(value)
+        elif value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+            if '_' in value:
+                value = value.replace('_', ' ')
+        return value
+
+    def get_attributes_list(self, class_name):
+        """Retrive all attributes of a class."""
+        attributes = []
+        for attr in class_name.__dict__.items():
+            if '_' not in attr[0]:
+                attributes.append(attr[0])
+        return attributes
+
     def do_create(self, args):
         """Create an object of any class."""
-        c_name = att_name = att_val = ''
         args_list = args.split()
-        performPart = args_list[1].partition("=")
-        equalFound = any(item == "=" for item in performPart)
-        if not args_list:
+        c_name = args_list[0]
+        """Create an object of any class."""
+        if not c_name:
             print("** class name missing **")
             return
-        c_name = args_list[0]
         if c_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
         new_instance = HBNBCommand.classes[c_name]()
-        if equalFound:
-            for i in range(1, len(args_list)):
-                part = args_list[i].partition("=")
-                att_name = part[0]
-                att_val = part[2]
-                if '.' in att_val:
-                    att_val = float(att_val)
-                elif att_val.isdigit():
-                    att_val = int(att_val)
-                elif att_val.startswith('"') and att_val.endswith('"'):
-                    att_val = att_val[1:-1]
-                    if '_' in att_val:
-                        att_val = att_val.replace('_', ' ')
-                setattr(new_instance, att_name, att_val)
-                att_name = att_val = ''
+        for i in range(0, len(args_list) - 1):
+            params = args_list[i + 1].partition("=")
+            if params[0] and params[2]:
+                att_name = params[0]
+                att_val = self.convert_value(params[2])
+                attr_list = self.get_attributes_list(self.classes[c_name])
+                if att_name not in attr_list:
+                    continue
+                if att_val:
+                    setattr(new_instance, att_name, att_val)
         new_instance.save()
         print(new_instance.id)
 
