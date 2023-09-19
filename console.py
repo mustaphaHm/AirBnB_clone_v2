@@ -116,14 +116,14 @@ class HBNBCommand(cmd.Cmd):
 
     def convert_value(self, value):
         """Convert attribute value to teh right type."""
-        if '.' in value:
-            value = float(value)
-        elif value.isdigit():
-            value = int(value)
-        elif value.startswith('"') and value.endswith('"'):
+        if value.startswith('"') and value.endswith('"'):
             value = value[1:-1]
             if '_' in value:
                 value = value.replace('_', ' ')
+        elif '.' in value:
+            value = float(value)
+        elif value.isdigit():
+            value = int(value)
         return value
 
     def get_attributes_list(self, class_name):
@@ -150,12 +150,12 @@ class HBNBCommand(cmd.Cmd):
         new_instance = HBNBCommand.classes[c_name]()
         for i in range(0, len(args_list) - 1):
             params = args_list[i + 1].partition("=")
-            att_name = params[0]
-            att_val = self.convert_value(params[2])
-            attr_list = self.get_attributes_list(self.classes[c_name])
-            if att_name not in attr_list:
-                continue
-            if att_val:
+            if params[0] and params[2]:
+                att_name = params[0]
+                att_val = self.convert_value(params[2])
+                attr_list = self.get_attributes_list(self.classes[c_name])
+                if att_name not in attr_list:
+                    continue
                 setattr(new_instance, att_name, att_val)
         new_instance.save()
         print(new_instance.id)
