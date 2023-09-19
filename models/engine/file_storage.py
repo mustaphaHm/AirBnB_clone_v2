@@ -14,7 +14,7 @@ class FileStorage:
         if cls is not None:
             myDict = {}
             for k, v in FileStorage.__objects.items():
-                c_name = k[0].split('.')[0]
+                c_name = k.split('.')[0]
                 if c_name == cls.__name__:
                     myDict[k] = v
             return myDict
