@@ -150,14 +150,13 @@ class HBNBCommand(cmd.Cmd):
         new_instance = HBNBCommand.classes[c_name]()
         for i in range(0, len(args_list) - 1):
             params = args_list[i + 1].partition("=")
-            if params[0] and params[2]:
-                att_name = params[0]
-                att_val = self.convert_value(params[2])
-                attr_list = self.get_attributes_list(self.classes[c_name])
-                if att_name not in attr_list:
-                    continue
-                if att_val:
-                    setattr(new_instance, att_name, att_val)
+            att_name = params[0]
+            att_val = self.convert_value(params[2])
+            attr_list = self.get_attributes_list(self.classes[c_name])
+            if att_name not in attr_list:
+                continue
+            if att_val:
+                setattr(new_instance, att_name, att_val)
         new_instance.save()
         print(new_instance.id)
 
