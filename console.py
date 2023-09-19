@@ -2,6 +2,7 @@
 """Console Module."""
 import cmd
 import sys
+import inspect
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -128,9 +129,11 @@ class HBNBCommand(cmd.Cmd):
     def get_attributes_list(self, class_name):
         """Retrive all attributes of a class."""
         attributes = []
-        for attr in class_name.__dict__.items():
-            if '_' not in attr[0]:
-                attributes.append(attr[0])
+        inpectM = inspect.ismethod
+        inspectF = inspect.isfunction
+        for attr_name, attr_value in class_name.__dict__.items():
+            if not inpectM(attr_value) and not inspectF(attr_value):
+                attributes.append(attr_name)
         return attributes
 
     def do_create(self, args):
