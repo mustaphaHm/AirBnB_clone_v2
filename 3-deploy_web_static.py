@@ -1,67 +1,73 @@
 #!/usr/bin/python3
-"""Module to Compress files"""
+"""Fabric implemntation of deplpy functiom to 2 remote hosts and locally
+"""
 import os
+import fabric.api as api
 from datetime import datetime
-from fabric.api import *
+from pathlib import Path
 
-env.hosts = ["54.160.120.200", "54.145.155.255"]
-env.user = "ubuntu"
+api.env.hosts = ['100.26.220.252', '54.209.204.18']
 
 
 def do_pack():
-    """Create a .tgz archive from the contents of the web_static folder."""
+    """Pack content into archive
+    """
+    version_dir = Path('./versions')
+    if not version_dir.exists():
+        os.mkdir(version_dir)
+    now = datetime.now()
+
+    # absolute path to the compressed file
+    file_name = version_dir / "web_static_{}{}{}{}{}{}.tgz".format(
+            now.year, now.month, now.day,
+            now.hour, now.minute, now.second)
     try:
-        if not os.path.isdir("versions"):
-            os.mkdir("versions")
-        now = datetime.now().strftime("%Y%m%d%H%M%S")
-        archive_name = "web_static_{}.tgz".format(now)
-        archive_path = "versions/{}".format(archive_name)
-        print("Packing web_static to {}".format(archive_path))
-        local("tar -cvzf {} web_static".format(archive_path))
-        size = os.stat(archive_path).st_size
-        print("web_static packed: {} -> {}Bytes".format(archive_path, size))
-        return archive_path
-    except Exception as e:
-        print("Archive creation failed:", str(e))
+        api.local(f"tar -zcvf {file_name.absolute()} -C web_static .")
+        return str(file_name.absolute())
+    except Exception:
         return None
 
 
 def do_deploy(archive_path):
-    """Distributes an archive to your web servers."""
-    if not os.path.exists(archive_path):
+    """Deploys archive ti remote host or production
+    """
+    if not Path(archive_path).exists():
         return False
-
     try:
-        # Upload the archive to the /tmp/ directory of the web server
-        put(archive_path, "/tmp/")
-        filename = os.path.basename(archive_path)
-        folder_name = "/data/web_static/releases/{}".format(
-                                                      filename.split(".")[0]
-                                                    )
+        file_name = archive_path.split('/')[-1]
+        file_name_no_ext = file_name.split('.')[0]
+        new_path = '/data/web_static/releases/{}'.format(
+                file_name_no_ext)
+        curr_path = '/data/web_static/current'
 
-        # Uncompress the archive to the folder
-        run("mkdir -p {}".format(folder_name))
-        run("tar -xzf /tmp/{} -C {}".format(filename, folder_name))
-        run("rm /tmp/{}".format(filename))
-        run("mv {}/web_static/* {}/".format(folder_name, folder_name))
-        run("rm -rf {}/web_static".format(folder_name))
+        run_locally = os.getenv("run_locally", None)
+        if run_locally is None:
+            api.local(f'mkdir -p {new_path}')
+            api.local(f'tar -zxf {archive_path} -C {new_path}')
+            api.local(f'rm -rfR {curr_path}')
+            api.local(f'ln -s {new_path} {curr_path}')
+            os.environ['run_locally'] = "True"
 
-        # Delete the symbolic link /data/web_static/current from the web server
-        run("rm -rf /data/web_static/current")
-
-        # Create a new symbolic link linked to the new version of the code
-        run("ln -s {} /data/web_static/current".format(folder_name))
-        print("New version deployed!")
-
+        api.put(archive_path, '/tmp/')
+        api.run(f'mkdir -p {new_path}')
+        api.run(f'tar -zxf /tmp/{file_name} -C {new_path}')
+        api.run(f'rm /tmp/{file_name}')
+        api.run(f'rm -rfR {curr_path}')
+        api.run(f'ln -s {new_path} {curr_path}')
         return True
-    except Exception as e:
-        print("Deployment failed:", str(e))
+    except Exception:
         return False
 
 
 def deploy():
-    """Create and distribute an archive to web servers"""
-    archive_path = do_pack()
+    """ Deploy the the archive dynamically
+    """
+    archive_path = os.getenv('archive_path', None)
+    if archive_path is None:
+        archive_path = do_pack()
+        os.environ['archive_path'] = archive_path
+
     if archive_path is None:
         return False
-    return do_deploy(archive_path)
+    result = do_deploy(archive_path)
+    return result
